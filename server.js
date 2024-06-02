@@ -1,9 +1,11 @@
 import cors from 'cors';
 import express from 'express';
 import fetch from 'node-fetch';
-import OpenAI from 'openai';
+import OpenAI from "openai";
 import path from 'path';
 import { fileURLToPath } from 'url';
+import config from "./config";
+
 
 // Fix for __dirname in ES6 modules
 const __filename = fileURLToPath(import.meta.url);
@@ -11,9 +13,6 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const port = 3002;
-
-
-OpenAI.apiKey = '';
 
 // Enable CORS
 app.use(cors({
@@ -26,7 +25,7 @@ app.use(express.json());
 app.use('/public', express.static(path.join(__dirname, 'public')));
 
 // Environment variable for API key
-const API_KEY = process.env.API_KEY;
+const openai = new OpenAI(config.sensitivity_key);
 
 
 app.get('/get_user_login', (req, res) => {
@@ -40,7 +39,7 @@ app.get('/calculateValue', async (req, res) => {
         const baseUrl = `https://www.mouse-sensitivity.com/senstailor/`;
 
         let params = new URLSearchParams();
-        params.append('key', API_KEY);
+        params.append('key', config.sensitivity_key);
         params.append('v', '11.3.a');
         params.append('gameid1', gameid1);
         params.append('sens1', sens1);
@@ -68,7 +67,7 @@ app.get('/calculateValue', async (req, res) => {
 app.get('/fetchGameNames', async (req, res) => {
     try {
         const { gameName } = req.query;
-        const url = `https://www.mouse-sensitivity.com/senstailor/?key=${API_KEY}&v=11.3.a&query=gamelist&game=${encodeURIComponent(gameName)}`;
+        const url = `https://www.mouse-sensitivity.com/senstailor/?key=${config.sensitivity_key}&v=11.3.a&query=gamelist&game=${encodeURIComponent(gameName)}`;
 
         const response = await fetch(url);
         if (!response.ok) {
@@ -180,21 +179,12 @@ app.post('/generateMessage', async (req, res) => {
     const { prompt } = req.body;
     console.log(prompt)
     try {
-        const completion = await OpenAI.complete({
-            engine: 'text-davinci-003', // Choose the appropriate engine
-            prompt: prompt,
-            maxTokens: 1024, // Adjust as needed
-            temperature: 0.7, // Adjust as needed
-            n: 1,
-            stop: null, // Or provide a stop sequence
+        const completion = await openai.chat.completions.create({
+            messages: [{ role: "system", content: prompt }],
+            model: "gpt-3.5-turbo",
         });
 
-        // const completion = await OpenAI.completions.create({
-        //     model: 'gpt-3.5-turbo-instruct',
-        //     prompt: prompt
-        // });
-
-        const message = completion.data.choices[0].text.trim();
+        const message = completion?.choices[0]?.message
         res.json({ message });
 
     } catch (error) {
