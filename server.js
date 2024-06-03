@@ -80,7 +80,6 @@ app.get('/fetchGameNames', async (req, res) => {
 
 const calculateSensitivity = (overWatchSens, aimPreference, dpi) => {
     const valorantSens = overWatchSens * 0.07;
-
     console.log(valorantSens)
     let feedback;
 
@@ -108,22 +107,30 @@ const calculateSensitivity = (overWatchSens, aimPreference, dpi) => {
             break;
     }
 
-    // Log the extracted and processed values
-    // console.log(`Valorant Sensitivity: ${valorantSens}`);
-    // console.log(`Decimal Part: ${decimalPart}`);
-    // console.log(`Selected Digit based on aim preference (${aimPreference}): ${selectedDigit}`);
-
     selectedDigit = parseInt(selectedDigit, 10); // Convert the selected digit to an integer
 
     console.log(`Selected Digit (Integer): ${selectedDigit}`);
+
+    const orientationMapping = {
+        0: '48 minutes',
+        1: '51 minutes',
+        2: '54 minutes',
+        3: '57 minutes',
+        4: '60 minutes',
+        5: '3 minutes',
+        6: '6 minutes',
+        7: '9 minutes',
+        8: '12 minutes',
+        9: '15 minutes'
+    };
 
     switch (selectedDigit) {
         case 0:
             feedback = {
                 pros: 'Neutral/flat grip for balance. The aiming preference you selected may be your "anchor point". You can either select a new aiming preference or senstailor will tailor a new sensitivity based on your current aiming preference.',
                 cons: '',
-                orientation: '',
-                clockImageUrl: '',
+                orientation: orientationMapping[selectedDigit],
+                clockImageUrl: `/public/clock_images/${selectedDigit}.png`,
                 newSensitivity: valorantSens,
                 dpi: dpi,
                 aimPreference: aimPreference,
@@ -133,8 +140,8 @@ const calculateSensitivity = (overWatchSens, aimPreference, dpi) => {
             feedback = {
                 pros: 'This sensitivity will have the fastest general aim and fastest reaction times as well as fastest precision.',
                 cons: 'This sensitivity will be bad for tracking and you may undershoot at times. It also will be biased to left-hand side targets/shots and weaker at hitting right-hand side targets/shots.',
-                orientation: '48 minutes',
-                clockImageUrl: '/public/clock_images/1.png',
+                orientation: orientationMapping[selectedDigit],
+                clockImageUrl: `/public/clock_images/${selectedDigit}.png`,
                 newSensitivity: valorantSens,
                 dpi: dpi,
                 aimPreference: aimPreference,
@@ -144,8 +151,8 @@ const calculateSensitivity = (overWatchSens, aimPreference, dpi) => {
             feedback = {
                 pros: 'This sensitivity will have a balance between control, highest precision and even target selection on left and right.',
                 cons: 'This sensitivity has a low "range"/"field of aim" so it will undershoot and struggle with tracking.',
-                orientation: '51 minutes',
-                clockImageUrl: '/public/clock_images/2.png',
+                orientation: orientationMapping[selectedDigit],
+                clockImageUrl: `/public/clock_images/${selectedDigit}.png`,
                 newSensitivity: valorantSens,
                 dpi: dpi,
                 aimPreference: aimPreference,
@@ -155,8 +162,8 @@ const calculateSensitivity = (overWatchSens, aimPreference, dpi) => {
             feedback = {
                 pros: 'This sensitivity will have the best mouse control. You will feel a strong grip and be able to make high accuracy adjustments and 180s.',
                 cons: 'This sensitivity will be bad for tracking and will undershoot. It also will be biased to left-hand side targets/shots and weaker at hitting right-hand side targets/shots.',
-                orientation: '54 minutes',
-                clockImageUrl: '/public/clock_images/3.png',
+                orientation: orientationMapping[selectedDigit],
+                clockImageUrl: `/public/clock_images/${selectedDigit}.png`,
                 newSensitivity: valorantSens,
                 dpi: dpi,
                 aimPreference: aimPreference,
@@ -166,8 +173,8 @@ const calculateSensitivity = (overWatchSens, aimPreference, dpi) => {
             feedback = {
                 pros: 'This sensitivity is great for flick aim and spray transfers.',
                 cons: 'This sensitivity will look shaky and can be very inconsistent.',
-                orientation: '57 minutes',
-                clockImageUrl: '/public/clock_images/4.png',
+                orientation: orientationMapping[selectedDigit],
+                clockImageUrl: `/public/clock_images/${selectedDigit}.png`,
                 newSensitivity: valorantSens,
                 dpi: dpi,
                 aimPreference: aimPreference,
@@ -177,8 +184,8 @@ const calculateSensitivity = (overWatchSens, aimPreference, dpi) => {
             feedback = {
                 pros: 'This sensitivity has the best all-round aim. It\'s the most consistent for tracking, flicking, and precision aim. It also has even target selection on left and right.',
                 cons: 'This sensitivity has a very high skill ceiling to master and get desired effects. It can look very shaky.',
-                orientation: '60 minutes',
-                clockImageUrl: '/public/clock_images/5.png',
+                orientation: orientationMapping[selectedDigit],
+                clockImageUrl: `/public/clock_images/${selectedDigit}.png`,
                 newSensitivity: valorantSens,
                 dpi: dpi,
                 aimPreference: aimPreference,
@@ -188,8 +195,8 @@ const calculateSensitivity = (overWatchSens, aimPreference, dpi) => {
             feedback = {
                 pros: 'This sensitivity will have the highest first shot accuracy and tracking.',
                 cons: 'This sensitivity will feel extremely shaky and inconsistent.',
-                orientation: '3 minutes',
-                clockImageUrl: '/public/clock_images/6.png',
+                orientation: orientationMapping[selectedDigit],
+                clockImageUrl: `/public/clock_images/${selectedDigit}.png`,
                 newSensitivity: valorantSens,
                 dpi: dpi,
                 aimPreference: aimPreference,
@@ -199,8 +206,8 @@ const calculateSensitivity = (overWatchSens, aimPreference, dpi) => {
             feedback = {
                 pros: 'The sensitivity has great focus/looks stable and is great for movement and rhythm-based aiming. It also has a range/"field of aim".',
                 cons: 'This sensitivity may cause you to overshoot.',
-                orientation: '6 minutes',
-                clockImageUrl: '/public/clock_images/7.png',
+                orientation: orientationMapping[selectedDigit],
+                clockImageUrl: `/public/clock_images/${selectedDigit}.png`,
                 newSensitivity: valorantSens,
                 dpi: dpi,
                 aimPreference: aimPreference,
@@ -210,8 +217,8 @@ const calculateSensitivity = (overWatchSens, aimPreference, dpi) => {
             feedback = {
                 pros: 'The sensitivity will have "pencil aim". It\'s amazing for prefiring, adjustments, tracking, flicking and has very high mouse control. It also has even target selection on left and right.',
                 cons: 'This sensitivity will cause you to overshoot. It can feel very shaky and inconsistent and the movement can be sloppy at times.',
-                orientation: '9 minutes',
-                clockImageUrl: '/public/clock_images/8.png',
+                orientation: orientationMapping[selectedDigit],
+                clockImageUrl: `/public/clock_images/${selectedDigit}.png`,
                 newSensitivity: valorantSens,
                 dpi: dpi,
                 aimPreference: aimPreference,
@@ -221,8 +228,8 @@ const calculateSensitivity = (overWatchSens, aimPreference, dpi) => {
             feedback = {
                 pros: 'This sensitivity has the largest field of aim. It\'s very fast for adjustments and reaction time. It can also be great for movement and prefiring.',
                 cons: 'This sensitivity will be bad for micro-adjustments/precision. At times it will feel inconsistent and shaky and overshoot a lot.',
-                orientation: '12 minutes',
-                clockImageUrl: '/public/clock_images/9.png',
+                orientation: orientationMapping[selectedDigit],
+                clockImageUrl: `/public/clock_images/${selectedDigit}.png`,
                 newSensitivity: valorantSens,
                 dpi: dpi,
                 aimPreference: aimPreference,
@@ -267,8 +274,8 @@ app.post('/convertSensitivity', (req, res) => {
     }
 });
 
-// Function to generate zigzag image
-const generateZigzagImage = (width, height, amplitude, frequency) => {
+// Function to generate zigzag image based on orientation
+const generateZigzagImage = (width, height, amplitude, orientation) => {
     const canvas = createCanvas(width, height);
     const context = canvas.getContext('2d');
 
@@ -279,8 +286,16 @@ const generateZigzagImage = (width, height, amplitude, frequency) => {
     context.lineWidth = 2;
 
     context.beginPath();
-    for (let x = 0; x < width; x++) {
-        const y = height / 2 + amplitude * Math.sin((x / width) * frequency * 2 * Math.PI);
+    let x = 0;
+    let y = height / 2;
+    context.moveTo(x, y);
+
+    const angle = (orientation * Math.PI) / 30; // Convert minutes to radians
+    const step = width / 10; // Define step size for the zigzag pattern
+
+    for (let i = 0; i < 10; i++) {
+        x += step;
+        y += amplitude * Math.sin(i * angle);
         context.lineTo(x, y);
     }
     context.stroke();
@@ -297,14 +312,27 @@ app.get('/generateZigzag', (req, res) => {
 
         const amplitude = parseFloat(sensitivity) * 10; // Example transformation
         console.log(`Calculated amplitude: ${amplitude}`);
-        const frequency = 10; // Example frequency
-        console.log(`Using frequency: ${frequency}`);
+        const selectedDigit = parseInt(sensitivity.split('.')[1][0], 10); // Assuming we use the first digit after decimal
+        const orientationMapping = {
+            0: 48,
+            1: 51,
+            2: 54,
+            3: 57,
+            4: 60,
+            5: 3,
+            6: 6,
+            7: 9,
+            8: 12,
+            9: 15
+        };
+        const orientation = orientationMapping[selectedDigit];
+        console.log(`Using orientation: ${orientation} minutes`);
 
-        if (isNaN(amplitude) || isNaN(width) || isNaN(height)) {
+        if (isNaN(amplitude) || isNaN(width) || isNaN(height) || isNaN(orientation)) {
             throw new Error('Invalid input parameters');
         }
 
-        const zigzagImage = generateZigzagImage(parseInt(width), parseInt(height), amplitude, frequency);
+        const zigzagImage = generateZigzagImage(parseInt(width), parseInt(height), amplitude, orientation);
         console.log('Generated zigzag image successfully');
 
         res.setHeader('Content-Type', 'image/png');
@@ -336,4 +364,3 @@ app.post('/generateMessage', async (req, res) => {
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });
-
