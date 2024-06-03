@@ -1,10 +1,11 @@
+import { createCanvas } from 'canvas';
 import cors from 'cors';
 import express from 'express';
 import fetch from 'node-fetch';
 import OpenAI from 'openai';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import config from './config/index.js'; // Import the specific file
+import config from './config/index.js';
 
 // Fix for __dirname in ES6 modules
 const __filename = fileURLToPath(import.meta.url);
@@ -13,7 +14,6 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const port = 3002;
 
-// Enable CORS
 app.use(cors({
     origin: '*',
     methods: 'GET,PUT,POST,DELETE',
@@ -23,9 +23,7 @@ app.use(cors({
 app.use(express.json());
 app.use('/public', express.static(path.join(__dirname, 'public')));
 
-// Environment variable for API key
 const openai = new OpenAI(config.sensitivity_key);
-
 
 app.get('/get_user_login', (req, res) => {
     res.json({ message: 'Login endpoint' });
@@ -77,6 +75,7 @@ app.get('/fetchGameNames', async (req, res) => {
         res.status(500).json({ error: 'Failed to verify game name. Please try again.' });
     }
 });
+
 const calculateSensitivity = (overWatchSens, aimPreference, dpi) => {
     const valorantSens = overWatchSens * 0.07;
     let feedback;
@@ -96,6 +95,8 @@ const calculateSensitivity = (overWatchSens, aimPreference, dpi) => {
             focusValue = parseInt(valorantSens.toString().split('.')[0]);
             break;
     }
+
+    console.log(focusValue)
 
     switch (focusValue) {
         case 0:
@@ -249,7 +250,6 @@ app.post('/convertSensitivity', (req, res) => {
 
 // Function to generate zigzag image
 const generateZigzagImage = (width, height, amplitude, frequency) => {
-    const { createCanvas } = require('canvas');
     const canvas = createCanvas(width, height);
     const context = canvas.getContext('2d');
 
@@ -270,12 +270,30 @@ const generateZigzagImage = (width, height, amplitude, frequency) => {
 };
 
 app.get('/generateZigzag', (req, res) => {
-    const { width, height, amplitude, frequency } = req.query;
+    try {
+        const { width, height, sensitivity } = req.query;
 
-    const zigzagImage = generateZigzagImage(parseInt(width), parseInt(height), parseInt(amplitude), parseInt(frequency));
+        // Log the input parameters
+        console.log(`Received parameters - Width: ${width}, Height: ${height}, Sensitivity: ${sensitivity}`);
 
-    res.setHeader('Content-Type', 'image/png');
-    res.send(zigzagImage);
+        const amplitude = parseFloat(sensitivity) * 10; // Example transformation
+        console.log(`Calculated amplitude: ${amplitude}`);
+        const frequency = 10; // Example frequency
+        console.log(`Using frequency: ${frequency}`);
+
+        if (isNaN(amplitude) || isNaN(width) || isNaN(height)) {
+            throw new Error('Invalid input parameters');
+        }
+
+        const zigzagImage = generateZigzagImage(parseInt(width), parseInt(height), amplitude, frequency);
+        console.log('Generated zigzag image successfully');
+
+        res.setHeader('Content-Type', 'image/png');
+        res.send(zigzagImage);
+    } catch (error) {
+        console.error('Error generating zigzag image:', error);
+        res.status(500).json({ error: 'Failed to generate zigzag image. Please try again.' });
+    }
 });
 
 // OpenAI GPT-TURBO-3.5 
@@ -299,3 +317,4 @@ app.post('/generateMessage', async (req, res) => {
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });
+
