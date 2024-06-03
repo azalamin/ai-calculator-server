@@ -80,7 +80,6 @@ app.get('/fetchGameNames', async (req, res) => {
 
 const calculateSensitivity = (overWatchSens, aimPreference, dpi) => {
     const valorantSens = overWatchSens * 0.07;
-    console.log(valorantSens)
     let feedback;
 
     // Ensure we are working with a fixed decimal point value
@@ -93,13 +92,13 @@ const calculateSensitivity = (overWatchSens, aimPreference, dpi) => {
 
     let selectedDigit;
     switch (aimPreference) {
-        case 'wrist':
+        case 'arm':
             selectedDigit = decimalPart[0] || '0';
             break;
-        case 'finger':
+        case 'wrist':
             selectedDigit = decimalPart[1] || '0';
             break;
-        case 'arm':
+        case 'finger':
             selectedDigit = decimalPart[2] || '0';
             break;
         default:
