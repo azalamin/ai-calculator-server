@@ -59,6 +59,7 @@ app.get('/calculateValue', async (req, res) => {
     }
 });
 
+
 app.get('/fetchGameNames', async (req, res) => {
     try {
         const { gameName } = req.query;
@@ -70,6 +71,7 @@ app.get('/fetchGameNames', async (req, res) => {
         }
         const data = await response.json();
         res.json(data);
+        console.log(data)
     } catch (error) {
         console.error('Error:', error);
         res.status(500).json({ error: 'Failed to verify game name. Please try again.' });
@@ -78,27 +80,44 @@ app.get('/fetchGameNames', async (req, res) => {
 
 const calculateSensitivity = (overWatchSens, aimPreference, dpi) => {
     const valorantSens = overWatchSens * 0.07;
+
+    console.log(valorantSens)
     let feedback;
 
-    let focusValue;
+    // Ensure we are working with a fixed decimal point value
+    let focusValue = valorantSens.toFixed(3);
+    let decimalPart = focusValue.split('.')[1]; // Get the decimal part of the sensitivity
+
+    if (!decimalPart) {
+        decimalPart = '000'; // Default to '000' if there's no decimal part
+    }
+
+    let selectedDigit;
     switch (aimPreference) {
         case 'wrist':
-            focusValue = parseInt(valorantSens.toString().split('.')[1]?.[0]);
+            selectedDigit = decimalPart[0] || '0';
             break;
         case 'finger':
-            focusValue = parseInt(valorantSens.toString().split('.')[1]?.[1]);
+            selectedDigit = decimalPart[1] || '0';
             break;
         case 'arm':
-            focusValue = parseInt(valorantSens.toString().split('.')[1]?.[2]);
+            selectedDigit = decimalPart[2] || '0';
             break;
         default:
-            focusValue = parseInt(valorantSens.toString().split('.')[0]);
+            selectedDigit = decimalPart[0] || '0';
             break;
     }
 
-    console.log(focusValue)
+    // Log the extracted and processed values
+    // console.log(`Valorant Sensitivity: ${valorantSens}`);
+    // console.log(`Decimal Part: ${decimalPart}`);
+    // console.log(`Selected Digit based on aim preference (${aimPreference}): ${selectedDigit}`);
 
-    switch (focusValue) {
+    selectedDigit = parseInt(selectedDigit, 10); // Convert the selected digit to an integer
+
+    console.log(`Selected Digit (Integer): ${selectedDigit}`);
+
+    switch (selectedDigit) {
         case 0:
             feedback = {
                 pros: 'Neutral/flat grip for balance. The aiming preference you selected may be your "anchor point". You can either select a new aiming preference or senstailor will tailor a new sensitivity based on your current aiming preference.',
