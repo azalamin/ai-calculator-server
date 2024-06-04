@@ -1,18 +1,20 @@
 import { createCanvas } from 'canvas';
 import cors from 'cors';
+import dotenv from 'dotenv';
 import express from 'express';
 import fetch from 'node-fetch';
 import OpenAI from 'openai';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import config from './config/index.js';
+
+dotenv.config();
 
 // Fix for __dirname in ES6 modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const port = 3002;
+const port = process.env.PORT || 3002;
 
 app.use(cors({
     origin: '*',
@@ -23,7 +25,7 @@ app.use(cors({
 app.use(express.json());
 app.use('/public', express.static(path.join(__dirname, 'public')));
 
-const openai = new OpenAI(config.sensitivity_key);
+const openai = new OpenAI(process.env.SENSITIVITY_KEY);
 
 app.get('/get_user_login', (req, res) => {
     res.json({ message: 'Login endpoint' });
@@ -35,7 +37,7 @@ app.get('/calculateValue', async (req, res) => {
         const baseUrl = `https://www.mouse-sensitivity.com/senstailor/`;
 
         let params = new URLSearchParams();
-        params.append('key', config.sensitivity_key);
+        params.append('key', process.env.SENSITIVITY_KEY);
         params.append('v', '11.3.a');
         params.append('gameid1', gameid1);
         params.append('sens1', sens1);
@@ -62,7 +64,7 @@ app.get('/calculateValue', async (req, res) => {
 app.get('/fetchGameNames', async (req, res) => {
     try {
         const { gameName } = req.query;
-        const url = `https://www.mouse-sensitivity.com/senstailor/?key=${config.sensitivity_key}&v=11.3.a&query=gamelist&game=${encodeURIComponent(gameName)}`;
+        const url = `https://www.mouse-sensitivity.com/senstailor/?key=${process.env.SENSITIVITY_KEY}&v=11.3.a&query=gamelist&game=${encodeURIComponent(gameName)}`;
 
         const response = await fetch(url);
         if (!response.ok) {
@@ -70,7 +72,6 @@ app.get('/fetchGameNames', async (req, res) => {
         }
         const data = await response.json();
         res.json(data);
-        // console.log(data)
     } catch (error) {
         console.error('Error:', error);
         res.status(500).json({ error: 'Failed to verify game name. Please try again.' });
@@ -79,14 +80,11 @@ app.get('/fetchGameNames', async (req, res) => {
 
 const calculateSensitivity = (calculatedSens, aimPreference, dpi) => {
     const valorantSens = Number(calculatedSens); // Ensure calculatedSens is a number
-    // console.log(`Valorant Sensitivity: ${valorantSens}`);
     let feedback;
 
     // Ensure we are working with a fixed decimal point value
     let focusValue = valorantSens.toFixed(3);
     let decimalPart = focusValue.split('.')[1]; // Get the decimal part of the sensitivity
-
-    // console.log(`Decimal Part: ${decimalPart}`);
 
     if (!decimalPart) {
         decimalPart = '000'; // Default to '000' if there's no decimal part
@@ -109,8 +107,6 @@ const calculateSensitivity = (calculatedSens, aimPreference, dpi) => {
     }
 
     selectedDigit = parseInt(selectedDigit, 10); // Convert the selected digit to an integer
-
-    console.log(`Selected Digit (Integer): ${selectedDigit}`);
 
     const orientationMapping = {
         0: '48 minutes',
@@ -178,8 +174,6 @@ const calculateSensitivity = (calculatedSens, aimPreference, dpi) => {
         aimPreference: aimPreference,
     };
 
-    // console.log('Generated feedback:', feedback); // Log the feedback
-
     return {
         valorantSens: valorantSens.toFixed(3),
         feedback,
@@ -191,8 +185,6 @@ app.post('/convertSensitivity', (req, res) => {
     try {
         const result = calculateSensitivity(calculatedSens, aimPreference, dpi);
         const { valorantSens, feedback } = result;
-
-        // console.log('Returning result:', { valorantSens, feedback }); // Log the result being returned
 
         res.json({
             valorantSens: valorantSens,
@@ -236,9 +228,6 @@ const generateZigzagImage = (width, height, amplitude, orientation) => {
 app.get('/generateZigzag', (req, res) => {
     try {
         const { width, height, sensitivity } = req.query;
-
-        // Log the input parameters
-        // console.log(`Received parameters - Width: ${width}, Height: ${height}, Sensitivity: ${sensitivity}`);
 
         const amplitude = parseFloat(sensitivity) * 10; // Example transformation
 
