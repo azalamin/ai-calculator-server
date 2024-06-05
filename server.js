@@ -98,20 +98,37 @@ app.post('/gptSuggestion', async (req, res) => {
     const { suggestion, pros, cons } = gptDictionary[suggestionKey] || {};
 
     if (suggestionKey) {
-        const newSensitivity = substituteSensitivityValue(currentSensitivity, suggestionKey);
+        const newSensitivity = substituteSensitivityValue(currentSensitivity, aimPreference, suggestionKey);
         res.json({ suggestion, pros, cons, newSensitivity });
     } else {
         res.json({ suggestion: "I'm sorry, I don't have a suggestion for that." });
     }
 });
 
-const substituteSensitivityValue = (sensitivity, newDigit) => {
+const substituteSensitivityValue = (sensitivity, aimPreference, newDigit) => {
     let [integerPart, decimalPart] = sensitivity.toString().split('.');
     decimalPart = decimalPart || '000';
-    const newSensitivity = `${integerPart}.${newDigit}${decimalPart.slice(1)}`;
+
+    let decimalArray = decimalPart.split('');
+    switch (aimPreference) {
+        case 'arm':
+            decimalArray[0] = newDigit;
+            break;
+        case 'wrist':
+            decimalArray[1] = newDigit;
+            break;
+        case 'finger':
+            decimalArray[2] = newDigit;
+            break;
+        default:
+            break;
+    }
+    const newDecimalPart = decimalArray.join('');
+    const newSensitivity = `${integerPart}.${newDecimalPart}`;
 
     return parseFloat(newSensitivity);
 };
+
 
 app.get('/calculateValue', async (req, res) => {
     try {
