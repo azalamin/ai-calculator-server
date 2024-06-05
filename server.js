@@ -29,6 +29,22 @@ app.get('/get_user_login', (req, res) => {
     res.json({ message: 'Login endpoint' });
 });
 
+const gptDictionary = {
+    tracking: "This sensitivity has the best all round aim. It's the most consistent for tracking, flicking and precision aim. It also have even target selection on left and right.",
+    precision: "This sensitivity will have the fastest general aim and fastest reaction times as well as fastest precision.",
+    accuracy: "This sensitivity will have the best mouse control. You will feel a strong grip and be able to to make high accuracy adjustments and 180s.",
+    flick: "This sensitivity is great for flick aim and spray transfers.",
+    pencil: `The sensitivity will have "pencil aim". It's amazing for prefiring, adjustments, tracking, flicking and has very high mouse control. It also has even target selection on left and right.`,
+};
+
+app.post('/gptSuggestion', async (req, res) => {
+    const { query, aimPreference } = req.body;
+    console.log(query)
+    const suggestion = gptDictionary[query.toLowerCase()] || "I'm sorry, I don't have a suggestion for that.";
+
+    res.json({ suggestion });
+});
+
 app.get('/calculateValue', async (req, res) => {
     try {
         const { gameid1, sens1, gameid2 } = req.query;
@@ -288,6 +304,43 @@ app.post('/generateMessage', async (req, res) => {
         res.status(500).json({ error: 'Failed to generate message' });
     }
 });
+
+// Function to handle sensitivity substitution based on user request
+const substituteSensitivityValue = (sensitivity, improvement) => {
+    const improvementMapping = {
+        tracking: 5,
+        pencil: 8,
+        // Add other mappings as needed
+    };
+
+    const newDigit = improvementMapping[improvement] || 0;
+    let [integerPart, decimalPart] = sensitivity.toString().split('.');
+    decimalPart = decimalPart || '000';
+    const newSensitivity = `${integerPart}.${newDigit}${decimalPart.slice(1)}`;
+
+    return parseFloat(newSensitivity);
+};
+
+app.post('/adjustSensitivity', async (req, res) => {
+    const { sensitivity, aimPreference, improvement, gameid } = req.body;
+    console.log(req.body)
+    try {
+        const newSensitivity = substituteSensitivityValue(sensitivity, improvement);
+
+        // Call the API to convert the modified sensitivity back to the user's original game
+        const response = await fetch(`http://localhost:3002/calculateValue?gameid1=valorant&sens1=${newSensitivity}&gameid2=${gameid}`);
+        if (!response.ok) {
+            throw new Error('Failed to convert sensitivity back to user\'s game');
+        }
+
+        const data = await response.json();
+        res.json(data);
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ error: 'Failed to adjust sensitivity. Please try again.' });
+    }
+});
+
 
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
