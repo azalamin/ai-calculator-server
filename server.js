@@ -30,42 +30,88 @@ app.get('/get_user_login', (req, res) => {
 });
 
 const gptDictionary = {
-    1: "This sensitivity will have the fastest general aim and fastest reaction times as well as fastest precision.",
-    2: "This sensitivity will have a balance between control, highest precision and even target selection on left and right.",
-    3: "This sensitivity will have the best mouse control. You will feel a strong grip and be able to make high accuracy adjustments and 180s.",
-    4: "This sensitivity is great for flick aim and spray transfers.",
-    5: "This sensitivity has the best all round aim. It's the most consistent for tracking, flicking and precision aim. It also has even target selection on left and right.",
-    6: "This sensitivity will have the highest first shot accuracy and tracking.",
-    7: "The sensitivity has great focus/looks stable and is great for movement and rhythm based aiming.",
-    8: "The sensitivity will have 'pencil aim'. It's amazing for prefiring, adjustments, tracking, flicking and has very high mouse control. It also has even target selection on left and right. ",
-    9: "This sensitivity has the largest field of aim. It's very fast for adjustments and reaction time. It can also be great for movement and prefiring."
+    1: {
+        suggestion: "This sensitivity will have the fastest general aim and fastest reaction times as well as fastest precision.",
+        pros: "Fastest general aim and fastest reaction times, highest precision.",
+        cons: "Bad for tracking, may undershoot, biased to left-hand side targets."
+    },
+    2: {
+        suggestion: "This sensitivity will have a balance between control, highest precision and even target selection on left and right.",
+        pros: "Balanced control, highest precision, even target selection on left and right.",
+        cons: "Low range/field of aim, may undershoot and struggle with tracking."
+    },
+    3: {
+        suggestion: "This sensitivity will have the best mouse control. You will feel a strong grip and be able to make high accuracy adjustments and 180s.",
+        pros: "Best mouse control, strong grip, high accuracy adjustments and 180s.",
+        cons: "Bad for tracking, may undershoot, biased to left-hand side targets."
+    },
+    4: {
+        suggestion: "This sensitivity is great for flick aim and spray transfers.",
+        pros: "Great for flick aim and spray transfers.",
+        cons: "May look shaky and be very inconsistent."
+    },
+    5: {
+        suggestion: "This sensitivity has the best all-round aim. It's the most consistent for tracking, flicking and precision aim. It also has even target selection on left and right.",
+        pros: "Best all-round aim, consistent for tracking, flicking, and precision aim, even target selection on left and right.",
+        cons: "High skill ceiling to master, may look very shaky."
+    },
+    6: {
+        suggestion: "This sensitivity will have the highest first shot accuracy and tracking.",
+        pros: "Highest first shot accuracy and tracking.",
+        cons: "May feel extremely shaky and inconsistent."
+    },
+    7: {
+        suggestion: "The sensitivity has great focus/looks stable and is great for movement and rhythm-based aiming. It also has a range/field of aim.",
+        pros: "Great focus, stable, good for movement and rhythm-based aiming, has a range/field of aim.",
+        cons: "May cause overshooting."
+    },
+    8: {
+        suggestion: "The sensitivity will have 'pencil aim'. It's amazing for prefiring, adjustments, tracking, flicking and has very high mouse control. It also has even target selection on left and right.",
+        pros: "Amazing for prefiring, adjustments, tracking, flicking, very high mouse control, even target selection on left and right.",
+        cons: "May cause overshooting, can feel very shaky and inconsistent, movement can be sloppy."
+    },
+    9: {
+        suggestion: "This sensitivity will have the largest field of aim. It's very fast for adjustments and reaction time. It can also be great for movement and prefiring.",
+        pros: "Largest field of aim, very fast for adjustments and reaction time, great for movement and prefiring.",
+        cons: "Bad for micro adjustments/precision, may feel inconsistent and shaky, may overshoot a lot."
+    }
 };
 
-app.post('/gptSuggestion', async (req, res) => {
-    const { query } = req.body;
-    const words = query.toLowerCase().split(' ');
-
+const findBestMatchingSuggestion = (query) => {
+    const keywords = query.toLowerCase().split(' ');
     let bestMatch = '';
     let bestScore = 0;
 
-    for (const key in gptDictionary) {
-        const text = gptDictionary[key].toLowerCase();
-        let score = 0;
-        words.forEach(word => {
-            if (text.includes(word)) {
-                score++;
-            }
-        });
+    for (const [key, value] of Object.entries(gptDictionary)) {
+        const score = keywords.reduce((acc, keyword) => acc + (value.suggestion.toLowerCase().includes(keyword) ? 1 : 0), 0);
         if (score > bestScore) {
             bestScore = score;
-            bestMatch = gptDictionary[key];
+            bestMatch = key;
         }
     }
+    return bestMatch;
+};
 
-    const suggestion = bestMatch || "I'm sorry, I don't have a suggestion for that.";
+app.post('/gptSuggestion', async (req, res) => {
+    const { query, aimPreference, currentSensitivity } = req.body;
+    const suggestionKey = findBestMatchingSuggestion(query);
+    const { suggestion, pros, cons } = gptDictionary[suggestionKey] || {};
 
-    res.json({ suggestion });
+    if (suggestionKey) {
+        const newSensitivity = substituteSensitivityValue(currentSensitivity, suggestionKey);
+        res.json({ suggestion, pros, cons, newSensitivity });
+    } else {
+        res.json({ suggestion: "I'm sorry, I don't have a suggestion for that." });
+    }
 });
+
+const substituteSensitivityValue = (sensitivity, newDigit) => {
+    let [integerPart, decimalPart] = sensitivity.toString().split('.');
+    decimalPart = decimalPart || '000';
+    const newSensitivity = `${integerPart}.${newDigit}${decimalPart.slice(1)}`;
+
+    return parseFloat(newSensitivity);
+};
 
 app.get('/calculateValue', async (req, res) => {
     try {
@@ -328,40 +374,40 @@ app.post('/generateMessage', async (req, res) => {
 });
 
 // Function to handle sensitivity substitution based on user request
-const substituteSensitivityValue = (sensitivity, improvement) => {
-    const improvementMapping = {
-        tracking: 5,
-        pencil: 8,
-        // Add other mappings as needed
-    };
+// const substituteSensitivityValue = (sensitivity, improvement) => {
+//     const improvementMapping = {
+//         tracking: 5,
+//         pencil: 8,
+//         // Add other mappings as needed
+//     };
 
-    const newDigit = improvementMapping[improvement] || 0;
-    let [integerPart, decimalPart] = sensitivity.toString().split('.');
-    decimalPart = decimalPart || '000';
-    const newSensitivity = `${integerPart}.${newDigit}${decimalPart.slice(1)}`;
+//     const newDigit = improvementMapping[improvement] || 0;
+//     let [integerPart, decimalPart] = sensitivity.toString().split('.');
+//     decimalPart = decimalPart || '000';
+//     const newSensitivity = `${integerPart}.${newDigit}${decimalPart.slice(1)}`;
 
-    return parseFloat(newSensitivity);
-};
+//     return parseFloat(newSensitivity);
+// };
 
-app.post('/adjustSensitivity', async (req, res) => {
-    const { sensitivity, aimPreference, improvement, gameid } = req.body;
-    console.log(req.body)
-    try {
-        const newSensitivity = substituteSensitivityValue(sensitivity, improvement);
+// app.post('/adjustSensitivity', async (req, res) => {
+//     const { sensitivity, aimPreference, improvement, gameid } = req.body;
+//     console.log(req.body)
+//     try {
+//         const newSensitivity = substituteSensitivityValue(sensitivity, improvement);
 
-        // Call the API to convert the modified sensitivity back to the user's original game
-        const response = await fetch(`http://localhost:3002/calculateValue?gameid1=valorant&sens1=${newSensitivity}&gameid2=${gameid}`);
-        if (!response.ok) {
-            throw new Error('Failed to convert sensitivity back to user\'s game');
-        }
+//         // Call the API to convert the modified sensitivity back to the user's original game
+//         const response = await fetch(`http://localhost:3002/calculateValue?gameid1=valorant&sens1=${newSensitivity}&gameid2=${gameid}`);
+//         if (!response.ok) {
+//             throw new Error('Failed to convert sensitivity back to user\'s game');
+//         }
 
-        const data = await response.json();
-        res.json(data);
-    } catch (error) {
-        console.error('Error:', error);
-        res.status(500).json({ error: 'Failed to adjust sensitivity. Please try again.' });
-    }
-});
+//         const data = await response.json();
+//         res.json(data);
+//     } catch (error) {
+//         console.error('Error:', error);
+//         res.status(500).json({ error: 'Failed to adjust sensitivity. Please try again.' });
+//     }
+// });
 
 
 app.listen(port, () => {
