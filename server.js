@@ -14,6 +14,10 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const port = 3002;
 
+
+const BASE_URL = `https://www.mouse-sensitivity.com/senstailor/`;
+const API_VERSION = '11.3.a';
+
 app.use(cors({
     origin: '*',
     methods: 'GET,PUT,POST,DELETE',
@@ -130,10 +134,29 @@ const substituteSensitivityValue = (sensitivity, aimPreference, newDigit) => {
 };
 
 
+app.post('/convertToOriginalGame', async (req, res) => {
+    const { newSensitivity, originalGameId } = req.body;
+    const url = `${BASE_URL}?key=${config.sensitivity_key}&v=${API_VERSION}&query=calculate&gameid1=2347&sens1=${newSensitivity}&gameid2=${originalGameId}`;
+
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error('Failed to convert sensitivity back to original game');
+        }
+        const data = await response.json();
+        const originalGameSensitivity = data[0]?.sens1 || newSensitivity;
+
+        res.json({ originalGameSensitivity });
+    } catch (error) {
+        console.error('Error converting sensitivity back to original game:', error);
+        res.status(500).json({ error: 'Failed to convert sensitivity back to original game' });
+    }
+});
+
+
 app.get('/calculateValue', async (req, res) => {
     try {
         const { gameid1, sens1, gameid2 } = req.query;
-        const baseUrl = `https://www.mouse-sensitivity.com/senstailor/`;
 
         let params = new URLSearchParams();
         params.append('key', config.sensitivity_key);
@@ -146,7 +169,7 @@ app.get('/calculateValue', async (req, res) => {
         params.append('gameid2', gameid2);
         params.append('query', 'calculate');
 
-        let url = `${baseUrl}?${params}`;
+        let url = `${BASE_URL}?${params}`;
 
         const response = await fetch(url);
         if (!response.ok) {
