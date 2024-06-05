@@ -30,17 +30,39 @@ app.get('/get_user_login', (req, res) => {
 });
 
 const gptDictionary = {
-    tracking: "This sensitivity has the best all round aim. It's the most consistent for tracking, flicking and precision aim. It also have even target selection on left and right.",
-    precision: "This sensitivity will have the fastest general aim and fastest reaction times as well as fastest precision.",
-    accuracy: "This sensitivity will have the best mouse control. You will feel a strong grip and be able to to make high accuracy adjustments and 180s.",
-    flick: "This sensitivity is great for flick aim and spray transfers.",
-    pencil: `The sensitivity will have "pencil aim". It's amazing for prefiring, adjustments, tracking, flicking and has very high mouse control. It also has even target selection on left and right.`,
+    1: "This sensitivity will have the fastest general aim and fastest reaction times as well as fastest precision.",
+    2: "This sensitivity will have a balance between control, highest precision and even target selection on left and right.",
+    3: "This sensitivity will have the best mouse control. You will feel a strong grip and be able to make high accuracy adjustments and 180s.",
+    4: "This sensitivity is great for flick aim and spray transfers.",
+    5: "This sensitivity has the best all round aim. It's the most consistent for tracking, flicking and precision aim. It also has even target selection on left and right.",
+    6: "This sensitivity will have the highest first shot accuracy and tracking.",
+    7: "The sensitivity has great focus/looks stable and is great for movement and rhythm based aiming.",
+    8: "The sensitivity will have 'pencil aim'. It's amazing for prefiring, adjustments, tracking, flicking and has very high mouse control. It also has even target selection on left and right. ",
+    9: "This sensitivity has the largest field of aim. It's very fast for adjustments and reaction time. It can also be great for movement and prefiring."
 };
 
 app.post('/gptSuggestion', async (req, res) => {
-    const { query, aimPreference } = req.body;
-    console.log(query)
-    const suggestion = gptDictionary[query.toLowerCase()] || "I'm sorry, I don't have a suggestion for that.";
+    const { query } = req.body;
+    const words = query.toLowerCase().split(' ');
+
+    let bestMatch = '';
+    let bestScore = 0;
+
+    for (const key in gptDictionary) {
+        const text = gptDictionary[key].toLowerCase();
+        let score = 0;
+        words.forEach(word => {
+            if (text.includes(word)) {
+                score++;
+            }
+        });
+        if (score > bestScore) {
+            bestScore = score;
+            bestMatch = gptDictionary[key];
+        }
+    }
+
+    const suggestion = bestMatch || "I'm sorry, I don't have a suggestion for that.";
 
     res.json({ suggestion });
 });
