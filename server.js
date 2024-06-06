@@ -328,8 +328,8 @@ app.post('/convertSensitivity', (req, res) => {
     }
 });
 
-// Function to generate zigzag image based on orientation
-const generateZigzagImage = (width, height, amplitude, orientation) => {
+
+const generateZigzagImage = (width, height, sensitivity) => {
     const canvas = createCanvas(width, height);
     const context = canvas.getContext('2d');
 
@@ -340,16 +340,40 @@ const generateZigzagImage = (width, height, amplitude, orientation) => {
     context.lineWidth = 2;
 
     context.beginPath();
-    let x = 0;
+    let x = width / 2;
     let y = height / 2;
     context.moveTo(x, y);
 
-    const angle = (orientation * Math.PI) / 30; // Convert minutes to radians
-    const step = width / 10; // Define step size for the zigzag pattern
+    const step = 50; // Define step size for the zigzag pattern
 
-    for (let i = 0; i < 10; i++) {
-        x += step;
-        y += amplitude * Math.sin(i * angle);
+    // Extract the digits after the decimal point in the sensitivity
+    const decimalPart = sensitivity.split('.')[1];
+    if (!decimalPart) {
+        throw new Error('Invalid sensitivity value');
+    }
+
+    const orientationMapping = {
+        1: 17,
+        2: 34,
+        3: 51,
+        4: 68,
+        5: 90,
+        6: 107,
+        7: 124,
+        8: 141,
+        9: 158,
+        0: 0 // Assuming 0 degrees for 0, you can adjust as needed
+    };
+
+    for (let i = 0; i < decimalPart.length; i++) {
+        const digit = parseInt(decimalPart[i], 10);
+        const angle = (orientationMapping[digit] * Math.PI) / 180; // Convert degrees to radians
+
+        // Alternate direction to create a zigzag pattern
+        const direction = i % 2 === 0 ? 1 : -1;
+
+        x += step * Math.cos(angle) * direction;
+        y += step * Math.sin(angle);
         context.lineTo(x, y);
     }
     context.stroke();
@@ -361,31 +385,13 @@ app.get('/generateZigzag', (req, res) => {
     try {
         const { width, height, sensitivity } = req.query;
 
-        // Log the input parameters
-        // console.log(`Received parameters - Width: ${width}, Height: ${height}, Sensitivity: ${sensitivity}`);
-
         const amplitude = parseFloat(sensitivity) * 10; // Example transformation
 
-        const selectedDigit = parseInt(sensitivity.split('.')[1][0], 10); // Assuming we use the first digit after decimal
-        const orientationMapping = {
-            0: 48,
-            1: 51,
-            2: 54,
-            3: 57,
-            4: 60,
-            5: 3,
-            6: 6,
-            7: 9,
-            8: 12,
-            9: 15
-        };
-        const orientation = orientationMapping[selectedDigit];
-
-        if (isNaN(amplitude) || isNaN(width) || isNaN(height) || isNaN(orientation)) {
+        if (isNaN(amplitude) || isNaN(width) || isNaN(height)) {
             throw new Error('Invalid input parameters');
         }
 
-        const zigzagImage = generateZigzagImage(parseInt(width), parseInt(height), amplitude, orientation);
+        const zigzagImage = generateZigzagImage(parseInt(width), parseInt(height), sensitivity);
         console.log('Generated zigzag image successfully');
 
         res.setHeader('Content-Type', 'image/png');
@@ -395,6 +401,9 @@ app.get('/generateZigzag', (req, res) => {
         res.status(500).json({ error: 'Failed to generate zigzag image. Please try again.' });
     }
 });
+
+
+
 
 // OpenAI GPT-TURBO-3.5 
 app.post('/generateMessage', async (req, res) => {
