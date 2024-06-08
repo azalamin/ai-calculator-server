@@ -328,7 +328,6 @@ app.post('/convertSensitivity', (req, res) => {
     }
 });
 
-
 const generateZigzagImage = (width, height, sensitivity) => {
     const canvas = createCanvas(width, height);
     const context = canvas.getContext('2d');
@@ -365,29 +364,41 @@ const generateZigzagImage = (width, height, sensitivity) => {
         0: 0 // Assuming 0 degrees for 0, you can adjust as needed
     };
 
-    for (let i = 0; i < decimalPart.length; i++) {
-        const digit = parseInt(decimalPart[i], 10);
-        const angle = (orientationMapping[digit] * Math.PI) / 180; // Convert degrees to radians
+    // First digit (after decimal point)
+    let firstDigit = parseInt(decimalPart[0], 10);
+    let firstAngle = (orientationMapping[firstDigit] * Math.PI) / 180;
+    x += step * Math.cos(firstAngle);
+    y += step * Math.sin(firstAngle);
+    context.lineTo(x, y);
 
-        // Alternate direction to create a zigzag pattern
-        const direction = i % 2 === 0 ? 1 : -1;
+    // Second digit (should start from the beginning again)
+    x = width / 2;
+    y = height / 2;
+    context.moveTo(x, y);
+    let secondDigit = parseInt(decimalPart[1], 10);
+    let secondAngle = (orientationMapping[secondDigit] * Math.PI) / 180;
+    x += step * Math.cos(secondAngle);
+    y += step * Math.sin(secondAngle);
+    context.lineTo(x, y);
 
-        x += step * Math.cos(angle) * direction;
-        y += step * Math.sin(angle);
-        context.lineTo(x, y);
-    }
+    // Third digit (continues from the end of the second digit)
+    let thirdDigit = parseInt(decimalPart[2], 10);
+    let thirdAngle = (orientationMapping[thirdDigit] * Math.PI) / 180;
+    x += step * Math.cos(thirdAngle);
+    y += step * Math.sin(thirdAngle);
+    context.lineTo(x, y);
+
     context.stroke();
 
     return canvas.toBuffer();
 };
 
+// Express route to handle the image generation request
 app.get('/generateZigzag', (req, res) => {
     try {
         const { width, height, sensitivity } = req.query;
 
-        const amplitude = parseFloat(sensitivity) * 10; // Example transformation
-
-        if (isNaN(amplitude) || isNaN(width) || isNaN(height)) {
+        if (isNaN(width) || isNaN(height)) {
             throw new Error('Invalid input parameters');
         }
 
@@ -401,6 +412,7 @@ app.get('/generateZigzag', (req, res) => {
         res.status(500).json({ error: 'Failed to generate zigzag image. Please try again.' });
     }
 });
+
 
 
 
