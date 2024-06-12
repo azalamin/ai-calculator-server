@@ -434,6 +434,35 @@ app.post('/generateMessage', async (req, res) => {
     }
 });
 
+
+app.post('/chat', async (req, res) => {
+    const userMessage = req.body.message;
+
+    try {
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${config.openapi_key}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                model: 'gpt-3.5-turbo',
+                messages: [{ role: 'user', content: userMessage }]
+            })
+        });
+
+        const data = await response.json();
+        const gptMessage = data.choices[0].message.content;
+        res.json({ response: gptMessage });
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ error: 'Something went wrong' });
+    }
+});
+
+
+
+
 // Function to handle sensitivity substitution based on user request
 // const substituteSensitivityValue = (sensitivity, improvement) => {
 //     const improvementMapping = {
