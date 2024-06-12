@@ -461,45 +461,6 @@ app.post('/chat', async (req, res) => {
 });
 
 
-
-
-// Function to handle sensitivity substitution based on user request
-// const substituteSensitivityValue = (sensitivity, improvement) => {
-//     const improvementMapping = {
-//         tracking: 5,
-//         pencil: 8,
-//         // Add other mappings as needed
-//     };
-
-//     const newDigit = improvementMapping[improvement] || 0;
-//     let [integerPart, decimalPart] = sensitivity.toString().split('.');
-//     decimalPart = decimalPart || '000';
-//     const newSensitivity = `${integerPart}.${newDigit}${decimalPart.slice(1)}`;
-
-//     return parseFloat(newSensitivity);
-// };
-
-// app.post('/adjustSensitivity', async (req, res) => {
-//     const { sensitivity, aimPreference, improvement, gameid } = req.body;
-//     console.log(req.body)
-//     try {
-//         const newSensitivity = substituteSensitivityValue(sensitivity, improvement);
-
-//         // Call the API to convert the modified sensitivity back to the user's original game
-//         const response = await fetch(`http://localhost:3002/calculateValue?gameid1=valorant&sens1=${newSensitivity}&gameid2=${gameid}`);
-//         if (!response.ok) {
-//             throw new Error('Failed to convert sensitivity back to user\'s game');
-//         }
-
-//         const data = await response.json();
-//         res.json(data);
-//     } catch (error) {
-//         console.error('Error:', error);
-//         res.status(500).json({ error: 'Failed to adjust sensitivity. Please try again.' });
-//     }
-// });
-
-
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });
