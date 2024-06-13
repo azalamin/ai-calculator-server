@@ -41,29 +41,33 @@ app.get("/get_user_login", (req, res) => {
 
 async function main() {
     try {
-
         await client.connect();
-        console.log('MongoDB connected');
-        const database = client.db('ai-calculator');
-        const usersCollection = database.collection('users');
+        console.log("MongoDB connected");
+        const database = client.db("ai-calculator");
+        const usersCollection = database.collection("users");
 
         // API endpoint to store user data on sign up
-        app.post('/save_user_data', async (req, res) => {
+        app.post("/save_user_data", async (req, res) => {
             const { email, firstName, lastName } = req.body;
             try {
                 const user = await usersCollection.findOne({ email });
                 if (user) {
-                    return res.status(200).json({ message: 'User already exists' });
+                    return res.status(200).json({ message: "User already exists" });
                 }
-                const result = await usersCollection.insertOne({ email, firstName, lastName, answeredQuestions: false });
-                res.status(200).json({ message: 'User data saved successfully', result });
+                const result = await usersCollection.insertOne({
+                    email,
+                    firstName,
+                    lastName,
+                    answeredQuestions: false,
+                });
+                res.status(200).json({ message: "User data saved successfully", result });
             } catch (error) {
-                res.status(500).json({ message: 'Error saving user data', error });
+                res.status(500).json({ message: "Error saving user data", error });
             }
         });
 
         // API endpoint to store user data (including 10 question answers)
-        app.post('/save_answers', async (req, res) => {
+        app.post("/save_answers", async (req, res) => {
             const { email, answers } = req.body;
             try {
                 const result = await usersCollection.updateOne(
@@ -71,14 +75,14 @@ async function main() {
                     { $set: { answers, answeredQuestions: true } },
                     { upsert: true }
                 );
-                res.status(200).json({ message: 'User answers saved successfully', result });
+                res.status(200).json({ message: "User answers saved successfully", result });
             } catch (error) {
-                res.status(500).json({ message: 'Error saving user answers', error });
+                res.status(500).json({ message: "Error saving user answers", error });
             }
         });
 
         // API endpoint to store user login time
-        app.post('/user_login', async (req, res) => {
+        app.post("/user_login", async (req, res) => {
             const { email, loginTime } = req.body;
             try {
                 const result = await usersCollection.updateOne(
@@ -86,21 +90,20 @@ async function main() {
                     { $set: { loginTime, loggedIn: true } },
                     { upsert: true }
                 );
-                res.status(200).json({ message: 'User login time saved successfully', result });
+                res.status(200).json({ message: "User login time saved successfully", result });
             } catch (error) {
-                res.status(500).json({ message: 'Error saving user login time', error });
+                res.status(500).json({ message: "Error saving user login time", error });
             }
         });
-
 
         app.post("/check_user", async (req, res) => {
             const { email } = req.body;
             try {
                 const user = await usersCollection.findOne({ email });
                 if (user && user.answeredQuestions) {
-                    return res.status(200).json({ message: 'User has answered the questions' });
+                    return res.status(200).json({ message: "User has answered the questions" });
                 }
-                res.status(200).json({ message: 'User has not answered the questions' });
+                res.status(200).json({ message: "User has not answered the questions" });
             } catch (error) {
                 console.error("Error checking user answers:", error);
                 res.status(500).json({ error: "Failed to check user answers" });
@@ -108,40 +111,34 @@ async function main() {
         });
 
         // API endpoint to store user logout time
-        app.post('/user_logout', async (req, res) => {
+        app.post("/user_logout", async (req, res) => {
             const { email, logoutTime } = req.body;
             try {
                 const result = await usersCollection.updateOne(
                     { email },
                     { $set: { logoutTime, loggedIn: false } }
                 );
-                res.status(200).json({ message: 'User logout time saved successfully', result });
+                res.status(200).json({ message: "User logout time saved successfully", result });
             } catch (error) {
-                res.status(500).json({ message: 'Error saving user logout time', error });
+                res.status(500).json({ message: "Error saving user logout time", error });
             }
         });
 
-
         app.post("/get_user_answers", async (req, res) => {
             const { email } = req.body;
-            console.log('Fetching answers for email:', email); // Debug log
 
             try {
                 const user = await usersCollection.findOne({ email });
                 if (user && user.answers) {
-                    console.log('User answers found:', user.answers); // Debug log
                     return res.status(200).json({ answers: user.answers });
                 }
-                console.log('No answers found for the user'); // Debug log
-                res.status(404).json({ message: 'No answers found for the user' });
+
+                res.status(404).json({ message: "No answers found for the user" });
             } catch (error) {
                 console.error("Error fetching user answers:", error);
                 res.status(500).json({ error: "Failed to fetch user answers" });
             }
         });
-
-
-
 
         const gptDictionary = {
             1: {
@@ -317,7 +314,6 @@ async function main() {
                 }
                 const data = await response.json();
                 res.json(data);
-                // console.log(data)
             } catch (error) {
                 console.error("Error:", error);
                 res.status(500).json({ error: "Failed to verify game name. Please try again." });
@@ -326,14 +322,11 @@ async function main() {
 
         const calculateSensitivity = (calculatedSens, aimPreference, dpi) => {
             const valorantSens = Number(calculatedSens); // Ensure calculatedSens is a number
-            // console.log(`Valorant Sensitivity: ${valorantSens}`);
             let feedback;
 
             // Ensure we are working with a fixed decimal point value
             let focusValue = valorantSens.toFixed(3);
             let decimalPart = focusValue.split(".")[1]; // Get the decimal part of the sensitivity
-
-            // console.log(`Decimal Part: ${decimalPart}`);
 
             if (!decimalPart) {
                 decimalPart = "000"; // Default to '000' if there's no decimal part
@@ -356,8 +349,6 @@ async function main() {
             }
 
             selectedDigit = parseInt(selectedDigit, 10); // Convert the selected digit to an integer
-
-            console.log(`Selected Digit (Integer): ${selectedDigit}`);
 
             const orientationMapping = {
                 0: "48 minutes",
@@ -425,8 +416,6 @@ async function main() {
                 aimPreference: aimPreference,
             };
 
-            // console.log('Generated feedback:', feedback); // Log the feedback
-
             return {
                 valorantSens: valorantSens.toFixed(3),
                 feedback,
@@ -438,8 +427,6 @@ async function main() {
             try {
                 const result = calculateSensitivity(calculatedSens, aimPreference, dpi);
                 const { valorantSens, feedback } = result;
-
-                // console.log('Returning result:', { valorantSens, feedback }); // Log the result being returned
 
                 res.json({
                     valorantSens: valorantSens,
@@ -578,7 +565,6 @@ async function main() {
             }
         });
 
-
         // Add this endpoint at the appropriate place in your backend
         app.post("/translate_game", async (req, res) => {
             const { gameData } = req.body;
@@ -599,8 +585,6 @@ async function main() {
                 res.status(500).json({ error: "Failed to translate game data" });
             }
         });
-
-
     } catch (err) {
         console.error(err);
     }
