@@ -541,7 +541,58 @@ async function main() {
         });
 
         app.post("/chat", async (req, res) => {
-            const userMessage = req.body.message;
+            const userMessage = `I'm a knowledgeable virtual assistant with extensive experience in providing tailored advice on various topics, including gaming-related queries. 
+            
+            Your task today involves making a suggestion to optimize mouse sensitivity for gaming using the mouse-sensitivity API. Kindly consider the user input provided: "${req.body.message}".
+            
+            Before generating a response, remember to take into account the user's specific gaming preferences, playstyle, and any additional details they might have provided. 
+            
+            For example, if a user mentions a preference for FPS games requiring quick reflexes, you can suggest a lower sensitivity setting for better precision during intense combat scenarios.
+            
+            We have predefined dictionary Heres:
+
+            0: Neutral/flat grip for balance. The aiming preference you selected may be your "anchor point". You can either select a new aiming preference or senstailor will tailor a new sensitivity based on your current aiming preference.
+
+            1: Pros: will have the fastest general aim and fastest reaction times as well as fastest precision.
+
+            Cons: This sensitivity will be bad for tracking and you may undershoot at times. It also will be biased to left-hand side targets/shots and weaker at hitting right-hand side targets/shots.
+
+            2: pros: This sensitivity will have a balance between control, highest precision and even target selection on left and right.
+            
+            cons: This sensitivity has a low "range"/"field of aim" so it will undershoot and struggle with tracking.
+
+            3: pros: This sensitivity will have the best mouse control. You will feel a strong grip and be able to make high accuracy adjustments and 180s.
+            
+            cons: This sensitivity will be bad for tracking and will undershoot. It also will be biased to left-hand side targets/shots and weaker at hitting right-hand side targets/shots.
+
+            4: pros: This sensitivity is great for flick aim and spray transfers.
+            
+            cons: This sensitivity will look shaky and can be very inconsistent.
+
+            5: pros: This sensitivity has the best all-round aim. It's the most consistent for tracking, flicking, and precision aim. It also has even target selection on left and right.
+
+            cons: This sensitivity has a very high skill ceiling to master and get desired effects. It can look very shaky.
+
+            6: pros: This sensitivity will have the highest first shot accuracy and tracking.
+
+            cons: This sensitivity will feel extremely shaky and inconsistent.
+
+            7: pros: The sensitivity has great focus/looks stable and is great for movement and rhythm-based aiming. It also has a range/"field of aim".
+            
+            cons: This sensitivity may cause you to overshoot.
+
+            8: pros: The sensitivity will have "pencil aim". It\'s amazing for prefiring, adjustments, tracking, flicking and has very high mouse control. It also has even target selection on left and right.
+            
+            cons: This sensitivity will cause you to overshoot. It can feel very shaky and inconsistent and the movement can be sloppy at times.
+
+            9: pros: This sensitivity has the largest field of aim. It's very fast for adjustments and reaction time. It can also be great for movement and prefiring.
+
+            cons: This sensitivity will be bad for micro-adjustments/precision. At times it will feel inconsistent and shaky and overshoot a lot
+            
+            
+            Based on these pros and cons, you will give me the suggestions.
+
+            `;
 
             try {
                 const response = await fetch("https://api.openai.com/v1/chat/completions", {
