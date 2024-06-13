@@ -47,16 +47,100 @@ async function main() {
         const database = client.db('ai-calculator');
         const usersCollection = database.collection('users');
 
-        // API endpoint to store user data
+        // API endpoint to store user data on sign up
         app.post('/save_user_data', async (req, res) => {
-            const { email, answers } = req.body;
+            const { email, firstName, lastName } = req.body;
             try {
-                const result = await usersCollection.insertOne({ email, answers });
+                const user = await usersCollection.findOne({ email });
+                if (user) {
+                    return res.status(200).json({ message: 'User already exists' });
+                }
+                const result = await usersCollection.insertOne({ email, firstName, lastName, answeredQuestions: false });
                 res.status(200).json({ message: 'User data saved successfully', result });
             } catch (error) {
                 res.status(500).json({ message: 'Error saving user data', error });
             }
         });
+
+        // API endpoint to store user data (including 10 question answers)
+        app.post('/save_answers', async (req, res) => {
+            const { email, answers } = req.body;
+            try {
+                const result = await usersCollection.updateOne(
+                    { email },
+                    { $set: { answers, answeredQuestions: true } },
+                    { upsert: true }
+                );
+                res.status(200).json({ message: 'User answers saved successfully', result });
+            } catch (error) {
+                res.status(500).json({ message: 'Error saving user answers', error });
+            }
+        });
+
+        // API endpoint to store user login time
+        app.post('/user_login', async (req, res) => {
+            const { email, loginTime } = req.body;
+            try {
+                const result = await usersCollection.updateOne(
+                    { email },
+                    { $set: { loginTime, loggedIn: true } },
+                    { upsert: true }
+                );
+                res.status(200).json({ message: 'User login time saved successfully', result });
+            } catch (error) {
+                res.status(500).json({ message: 'Error saving user login time', error });
+            }
+        });
+
+
+        app.post("/check_user", async (req, res) => {
+            const { email } = req.body;
+            try {
+                const user = await usersCollection.findOne({ email });
+                if (user && user.answeredQuestions) {
+                    return res.status(200).json({ message: 'User has answered the questions' });
+                }
+                res.status(200).json({ message: 'User has not answered the questions' });
+            } catch (error) {
+                console.error("Error checking user answers:", error);
+                res.status(500).json({ error: "Failed to check user answers" });
+            }
+        });
+
+        // API endpoint to store user logout time
+        app.post('/user_logout', async (req, res) => {
+            const { email, logoutTime } = req.body;
+            try {
+                const result = await usersCollection.updateOne(
+                    { email },
+                    { $set: { logoutTime, loggedIn: false } }
+                );
+                res.status(200).json({ message: 'User logout time saved successfully', result });
+            } catch (error) {
+                res.status(500).json({ message: 'Error saving user logout time', error });
+            }
+        });
+
+
+        app.post("/get_user_answers", async (req, res) => {
+            const { email } = req.body;
+            console.log('Fetching answers for email:', email); // Debug log
+
+            try {
+                const user = await usersCollection.findOne({ email });
+                if (user && user.answers) {
+                    console.log('User answers found:', user.answers); // Debug log
+                    return res.status(200).json({ answers: user.answers });
+                }
+                console.log('No answers found for the user'); // Debug log
+                res.status(404).json({ message: 'No answers found for the user' });
+            } catch (error) {
+                console.error("Error fetching user answers:", error);
+                res.status(500).json({ error: "Failed to fetch user answers" });
+            }
+        });
+
+
 
 
         const gptDictionary = {
@@ -493,6 +577,30 @@ async function main() {
                 res.status(500).json({ error: "Something went wrong" });
             }
         });
+
+
+        // Add this endpoint at the appropriate place in your backend
+        app.post("/translate_game", async (req, res) => {
+            const { gameData } = req.body;
+
+            try {
+                const prompt = `Translate or explain the following game data: ${gameData}`;
+
+                const response = await openai.chat.completions.create({
+                    messages: [{ role: "system", content: prompt }],
+                    model: "gpt-3.5-turbo",
+                });
+
+                const translatedData = response?.choices[0]?.message?.content;
+
+                res.json({ translatedData });
+            } catch (error) {
+                console.error("Error translating game data:", error);
+                res.status(500).json({ error: "Failed to translate game data" });
+            }
+        });
+
+
     } catch (err) {
         console.error(err);
     }
