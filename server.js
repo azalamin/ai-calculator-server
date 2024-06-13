@@ -618,13 +618,11 @@ async function main() {
 
         // Add this endpoint at the appropriate place in your backend
         app.post("/translate_game", async (req, res) => {
-            const { gameData } = req.body;
+            const { prompt } = req.body;
 
             try {
-                const prompt = `Translate or explain the following game data: ${gameData}`;
-
                 const response = await openai.chat.completions.create({
-                    messages: [{ role: "system", content: prompt }],
+                    messages: [{ role: "user", content: prompt }],
                     model: "gpt-3.5-turbo",
                 });
 
@@ -636,6 +634,8 @@ async function main() {
                 res.status(500).json({ error: "Failed to translate game data" });
             }
         });
+
+
     } catch (err) {
         console.error(err);
     }
