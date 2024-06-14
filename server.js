@@ -616,7 +616,30 @@ async function main() {
             }
         });
 
-        // Add this endpoint at the appropriate place in your backend
+
+        app.get("/fetchGameList", async (req, res) => {
+            try {
+                const response = await fetch(`${BASE_URL}?key=${config.sensitivity_key}&v=${API_VERSION}&query=gamelist`);
+                const data = await response.json();
+                res.json(data);
+            } catch (error) {
+                console.error('Error fetching game list:', error);
+                res.status(500).json({ error: 'Failed to fetch game list' });
+            }
+        });
+
+        app.get("/calculateToValorantValue", async (req, res) => {
+            const { gameid1, sens1 } = req.query;
+            try {
+                const response = await fetch(`${BASE_URL}?key=${config.sensitivity_key}&v=${API_VERSION}&query=calculate&gameid1=${gameid1}&sens1=${sens1}&gameid2=2347`);
+                const data = await response.json();
+                res.json(data);
+            } catch (error) {
+                console.error('Error calculating sensitivity:', error);
+                res.status(500).json({ error: 'Failed to calculate sensitivity' });
+            }
+        });
+
         app.post("/translate_game", async (req, res) => {
             const { prompt } = req.body;
 
