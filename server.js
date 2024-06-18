@@ -5,6 +5,7 @@ import { MongoClient } from "mongodb";
 import fetch from "node-fetch";
 import OpenAI from "openai";
 import path from "path";
+import Stripe from "stripe";
 import { fileURLToPath } from "url";
 import config from "./config/index.js";
 
@@ -34,6 +35,7 @@ app.use(express.json());
 app.use("/public", express.static(path.join(__dirname, "public")));
 
 const openai = new OpenAI(config.sensitivity_key);
+const stripe = new Stripe(config.stripeSecretKey);
 
 app.get("/get_user_login", (req, res) => {
     res.json({ message: "Login endpoint" });
@@ -655,6 +657,39 @@ async function main() {
             } catch (error) {
                 console.error("Error translating game data:", error);
                 res.status(500).json({ error: "Failed to translate game data" });
+            }
+        });
+
+
+        app.post('/create-payment-intent', async (req, res) => {
+            const { plan } = req.body;
+
+            let amount;
+            switch (plan) {
+                case 'dev':
+                    amount = 0;
+                    break;
+                case 'pro':
+                    amount = 1000; // $10.00 in cents
+                    break;
+                case 'enterprise':
+                    amount = 5000; // Custom amount example, you can set it as per your need
+                    break;
+                default:
+                    return res.status(400).json({ error: 'Invalid plan selected' });
+            }
+
+            try {
+                const paymentIntent = await stripe.paymentIntents.create({
+                    amount,
+                    currency: 'usd',
+                    automatic_payment_methods: {
+                        enabled: true,
+                    },
+                });
+                res.status(200).json({ clientSecret: paymentIntent.client_secret });
+            } catch (error) {
+                res.status(500).json({ error: error.message });
             }
         });
 
