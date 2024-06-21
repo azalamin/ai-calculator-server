@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { createCanvas } from "canvas";
 import cors from "cors";
 import express from "express";
@@ -16,8 +17,6 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const port = 3002;
-
-
 
 const BASE_URL = `https://www.mouse-sensitivity.com/senstailor/`;
 const API_VERSION = "11.3.a";
@@ -40,6 +39,10 @@ app.use("/public", express.static(path.join(__dirname, "public")));
 
 const openai = new OpenAI(config.sensitivity_key);
 const stripe = new Stripe(config.stripeSecretKey);
+
+// YouTube Data API Key and Channel ID
+const YOUTUBE_API_KEY = config.youtubeApiKey;
+const CHANNEL_ID = config.channelId;
 
 app.get("/get_user_login", (req, res) => {
     res.json({ message: "Login endpoint" });
@@ -71,6 +74,25 @@ async function main() {
         const database = client.db("ai-calculator");
         const usersCollection = database.collection("users");
         const commentsCollection = database.collection("comments");
+
+        app.get('/videos', async (req, res) => {
+            try {
+                const response = await axios.get(`https://www.googleapis.com/youtube/v3/search`, {
+                    params: {
+                        key: YOUTUBE_API_KEY,
+                        channelId: CHANNEL_ID,
+                        part: 'snippet',
+                        order: 'date',
+                        maxResults: 10,
+                    }
+                });
+                res.json(response.data.items);
+            } catch (error) {
+                console.error('Failed to fetch videos:', error);
+                res.status(500).send('Server error');
+            }
+        });
+
 
         // API endpoint to store user data on sign up
         app.post("/save_user_data", async (req, res) => {

@@ -8,5 +8,6 @@ export default {
     openapi_key: process.env.OPENAI_API_KEY,
     stripePublishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
     stripeSecretKey: process.env.STRIPE_SECRET_KEY,
-
+    youtubeApiKey: process.env.YOUTUBE_API_KEY,
+    channelId: process.env.CHANNEL_ID,
 }
