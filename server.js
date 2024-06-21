@@ -40,8 +40,7 @@ app.use("/public", express.static(path.join(__dirname, "public")));
 const openai = new OpenAI(config.sensitivity_key);
 const stripe = new Stripe(config.stripeSecretKey);
 
-// YouTube Data API Key and Channel ID
-const YOUTUBE_API_KEY = config.youtubeApiKey;
+// YouTube Channel ID
 const CHANNEL_ID = config.channelId;
 
 app.get("/get_user_login", (req, res) => {
@@ -66,6 +65,19 @@ const verifyToken = async (req, res, next) => {
 };
 
 
+const API_KEYS = [
+    config.youtubeApiKey,
+    config.youtubeApiKey2,
+    config.youtubeApiKey3,
+    config.youtubeApiKey4,
+];
+
+let currentKeyIndex = 0;
+
+const getApiKey = () => {
+    currentKeyIndex = (currentKeyIndex + 1) % API_KEYS.length;
+    return API_KEYS[currentKeyIndex];
+};
 
 async function main() {
     try {
@@ -79,17 +91,22 @@ async function main() {
             try {
                 const response = await axios.get(`https://www.googleapis.com/youtube/v3/search`, {
                     params: {
-                        key: YOUTUBE_API_KEY,
+                        key: getApiKey(),
                         channelId: CHANNEL_ID,
                         part: 'snippet',
                         order: 'date',
-                        maxResults: 10,
+                        maxResults: 5,
                     }
                 });
                 res.json(response.data.items);
+                console.log(response)
             } catch (error) {
-                console.error('Failed to fetch videos:', error);
-                res.status(500).send('Server error');
+                console.error('Failed to fetch videos:', error.response ? error.response.data : error.message);
+                if (error.response && error.response.status === 403) {
+                    res.status(403).json({ message: 'Quota limit reached. Please try again later.' });
+                } else {
+                    res.status(500).send('Server error while fetching videos');
+                }
             }
         });
 
