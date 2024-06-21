@@ -2,7 +2,6 @@ import { createCanvas } from "canvas";
 import cors from "cors";
 import express from "express";
 import admin from 'firebase-admin';
-import { readFileSync } from 'fs';
 import { MongoClient } from "mongodb";
 import fetch from "node-fetch";
 import OpenAI from "openai";
@@ -18,14 +17,7 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const port = 3002;
 
-// Load Firebase service account key file
-const serviceAccountPath = './config/firebase-service-account.json';
-const serviceAccount = JSON.parse(readFileSync(serviceAccountPath, 'utf8'));
 
-// Initialize Firebase Admin SDK
-admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount)
-});
 
 const BASE_URL = `https://www.mouse-sensitivity.com/senstailor/`;
 const API_VERSION = "11.3.a";
