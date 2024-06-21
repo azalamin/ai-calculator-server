@@ -1,12 +1,14 @@
 import { createCanvas } from "canvas";
 import cors from "cors";
 import express from "express";
+import admin from 'firebase-admin';
+import { readFileSync } from 'fs';
 import { MongoClient } from "mongodb";
 import fetch from "node-fetch";
 import OpenAI from "openai";
 import path from "path";
 import Stripe from "stripe";
-import { fileURLToPath } from "url";
+import { fileURLToPath } from 'url';
 import config from "./config/index.js";
 
 // Fix for __dirname in ES6 modules
@@ -15,6 +17,15 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const port = 3002;
+
+// Load Firebase service account key file
+const serviceAccountPath = './config/firebase-service-account.json';
+const serviceAccount = JSON.parse(readFileSync(serviceAccountPath, 'utf8'));
+
+// Initialize Firebase Admin SDK
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+});
 
 const BASE_URL = `https://www.mouse-sensitivity.com/senstailor/`;
 const API_VERSION = "11.3.a";
@@ -27,9 +38,10 @@ app.use(
     cors({
         origin: "*",
         methods: "GET,PUT,POST,DELETE",
-        allowedHeaders: "Content-Type",
+        allowedHeaders: "Content-Type, Authorization",
     })
 );
+
 
 app.use(express.json());
 app.use("/public", express.static(path.join(__dirname, "public")));
@@ -41,12 +53,32 @@ app.get("/get_user_login", (req, res) => {
     res.json({ message: "Login endpoint" });
 });
 
+
+// Verify Firebase token middleware
+const verifyToken = async (req, res, next) => {
+    const idToken = req.headers.authorization;
+    if (!idToken) {
+        return res.status(401).send('Unauthorized');
+    }
+
+    try {
+        const decodedToken = await admin.auth().verifyIdToken(idToken);
+        req.user = decodedToken;
+        next();
+    } catch (error) {
+        return res.status(401).send('Unauthorized');
+    }
+};
+
+
+
 async function main() {
     try {
         await client.connect();
         console.log("MongoDB connected");
         const database = client.db("ai-calculator");
         const usersCollection = database.collection("users");
+        const commentsCollection = database.collection("comments");
 
         // API endpoint to store user data on sign up
         app.post("/save_user_data", async (req, res) => {
@@ -690,6 +722,43 @@ async function main() {
                 res.status(200).json({ clientSecret: paymentIntent.client_secret });
             } catch (error) {
                 res.status(500).json({ error: error.message });
+            }
+        });
+
+
+        app.post("/post_comment", async (req, res) => {
+            const { email, name, comment } = req.body;
+            if (!comment || !email || !name) {
+                return res.status(400).json({ message: "Comment, email, and name are required" });
+            }
+
+            try {
+                // Check if user exists, if not create a new user
+                let user = await usersCollection.findOne({ email });
+                if (!user) {
+                    user = await usersCollection.insertOne({ email, name });
+                }
+
+                // Insert comment
+                const result = await commentsCollection.insertOne({
+                    email,
+                    name,
+                    comment,
+                    createdAt: new Date(),
+                });
+
+                res.status(201).json({ message: "Comment posted successfully", result });
+            } catch (error) {
+                res.status(500).json({ message: "Error posting comment", error });
+            }
+        });
+
+        app.get("/get_comments", async (req, res) => {
+            try {
+                const comments = await commentsCollection.find().toArray();
+                res.status(200).json(comments);
+            } catch (error) {
+                res.status(500).json({ message: "Error fetching comments", error });
             }
         });
 
