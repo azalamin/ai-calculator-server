@@ -8,6 +8,7 @@ import fetch from "node-fetch";
 import OpenAI from "openai";
 import path from "path";
 import Stripe from "stripe";
+import Twitter from 'twitter-v2';
 import { fileURLToPath } from 'url';
 import config from "./config/index.js";
 
@@ -79,6 +80,16 @@ const getApiKey = () => {
     return API_KEYS[currentKeyIndex];
 };
 
+
+
+// Initialize the Twitter client with your API keys
+const twitterClient = new Twitter({
+    consumer_key: config.twitterConsumerKey,
+    consumer_secret: config.twitterConsumerSecret,
+    bearer_token: config.twitterBearerToken
+});
+
+
 async function main() {
     try {
         await client.connect();
@@ -86,6 +97,19 @@ async function main() {
         const database = client.db("ai-calculator");
         const usersCollection = database.collection("users");
         const commentsCollection = database.collection("comments");
+
+        app.get('/tweets', async (req, res) => {
+            try {
+                const { data } = await client.get('tweets', {
+                    ids: '1512178023726206979', // Replace with valid Twitter user ID
+                    'tweet.fields': 'created_at,text,author_id'
+                });
+                res.json(data);
+            } catch (error) {
+                console.error('Error fetching tweets:', error);
+                res.status(500).json({ error: 'Error fetching tweets', details: error.message });
+            }
+        });
 
         app.get('/videos', async (req, res) => {
             try {

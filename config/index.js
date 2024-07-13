@@ -13,4 +13,7 @@ export default {
     youtubeApiKey3: process.env.YOUTUBE_API_KEY3,
     youtubeApiKey4: process.env.YOUTUBE_API_KEY4,
     channelId: process.env.CHANNEL_ID,
+    twitterConsumerKey: process.env.TWITTER_CONSUMER_KEY,
+    twitterConsumerSecret: process.env.TWITTER_CONSUMER_SECRET_KEY,
+    twitterBearerToken: process.env.TWITTER_BEARER_TOKEN
 }
